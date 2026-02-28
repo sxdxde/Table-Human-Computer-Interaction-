@@ -1,0 +1,2868 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tabla — Restaurants Worth Remembering</title>
+    <meta name="description"
+        content="Tabla is an elegant restaurant discovery platform for people who care about where they eat. Discover Chennai, Mumbai, and Bangalore's finest dining experiences." />
+
+    <!-- Google Fonts: Playfair Display (400, 400i, 700) + Inter (400, 500, 600) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        /* ═══════════════════════════════════════════════════════════════════════════
+       DESIGN TOKENS
+    ═══════════════════════════════════════════════════════════════════════════ */
+        :root {
+            --color-gold: #C9A96E;
+            --color-dark: #0E0C0A;
+            --color-ink: #2C2C2C;
+            --color-bg: #F7F5F2;
+            --color-surface: #FFFFFF;
+            --color-success: #4A7C59;
+            --color-danger: #B94040;
+            --color-neutral: #8A8A8A;
+            --color-muted: #D4CFC9;
+
+            --font-display: 'Playfair Display', Georgia, serif;
+            --font-body: 'Inter', system-ui, sans-serif;
+
+            --radius-card: 12px;
+            --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.07);
+            --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.13);
+            --transition: 200ms ease;
+            --transition-slow: 350ms ease;
+
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 3rem;
+            --space-xl: 6rem;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       BASE RESET
+    ═══════════════════════════════════════════════════════════════════════════ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            font-size: 16px;
+            color: var(--color-ink);
+            background: var(--color-bg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        img,
+        video {
+            display: block;
+            max-width: 100%;
+        }
+
+        button {
+            font-family: var(--font-body);
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       CINEMATIC — CANVAS & OVERLAYS
+    ═══════════════════════════════════════════════════════════════════════════ */
+        #cinematic-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 1;
+            background: #0E0C0A;
+        }
+
+        #cinematic-spacer {
+            position: relative;
+            z-index: 0;
+        }
+
+        /* ── Preload Bar ─────────────────────────────────────────────────────────── */
+        #preload-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.15);
+            z-index: 100;
+            transition: opacity 400ms ease;
+        }
+
+        #preload-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--color-gold);
+            transition: width 100ms linear;
+        }
+
+        /* ── Skip Button ─────────────────────────────────────────────────────────── */
+        #skip-btn {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.30);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.4rem 0.9rem;
+            border-radius: 20px;
+            cursor: pointer;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        #skip-btn:hover {
+            color: white;
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* ── Cinematic Overlays ──────────────────────────────────────────────────── */
+        .cinematic-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        .wordmark {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 7rem);
+            color: white;
+            letter-spacing: 0.12em;
+            font-weight: 400;
+            opacity: 0;
+            transition: opacity 600ms ease;
+        }
+
+        .tagline {
+            font-family: var(--font-body);
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            color: rgba(255, 255, 255, 0.75);
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            margin-top: 1rem;
+            opacity: 0;
+            transition: opacity 600ms ease 200ms;
+        }
+
+        .seq2-discover {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4vw, 4rem);
+            color: white;
+            font-weight: 400;
+            letter-spacing: 0.04em;
+            opacity: 0;
+            transition: opacity 600ms ease;
+        }
+
+        .seq2-cities {
+            font-family: var(--font-body);
+            font-size: clamp(0.85rem, 1.8vw, 1.1rem);
+            color: rgba(255, 255, 255, 0.65);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-top: 0.75rem;
+            opacity: 0;
+            transition: opacity 600ms ease;
+        }
+
+        /* ── Scroll Indicator ────────────────────────────────────────────────────── */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 800ms ease 1000ms;
+        }
+
+        .scroll-indicator-text {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            text-transform: uppercase;
+            letter-spacing: 0.35em;
+            margin-bottom: 0.9rem;
+            text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
+        }
+
+        .scroll-indicator-line {
+            width: 1px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scroll-indicator-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            animation: scroll-anim 2s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+        }
+
+        @keyframes scroll-anim {
+            0% {
+                transform: scaleY(0);
+                transform-origin: top;
+            }
+
+            50% {
+                transform: scaleY(1);
+                transform-origin: top;
+            }
+
+            50.1% {
+                transform: scaleY(1);
+                transform-origin: bottom;
+            }
+
+            100% {
+                transform: scaleY(0);
+                transform-origin: bottom;
+            }
+        }
+
+        /* ── Blur Interlude ──────────────────────────────────────────────────────── */
+        #blur-interlude {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            backdrop-filter: blur(40px) saturate(0.5) brightness(0.65);
+            background: rgba(8, 6, 4, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #blur-interlude blockquote {
+            font-family: var(--font-display);
+            font-size: clamp(1.4rem, 3.5vw, 3rem);
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.04em;
+            line-height: 1.5;
+            text-align: center;
+            max-width: 660px;
+            padding: 0 2rem;
+            font-style: italic;
+            font-weight: 400;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 700ms ease 150ms, transform 700ms ease 150ms;
+        }
+
+        /* ── Ghost Button ────────────────────────────────────────────────────────── */
+        .ghost-btn {
+            background: transparent;
+            border: 1.5px solid rgba(255, 255, 255, 0.7);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+            padding: 0.8rem 2.2rem;
+            border-radius: 40px;
+            cursor: pointer;
+            pointer-events: all;
+            opacity: 0;
+            transition: opacity 600ms ease, background 200ms ease;
+            margin-top: 2.5rem;
+        }
+
+        .ghost-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       MAIN APP SHELL
+    ═══════════════════════════════════════════════════════════════════════════ */
+        #main-app {
+            position: relative;
+            z-index: 10;
+            background: var(--color-bg);
+            min-height: 100vh;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       NAVIGATION
+       Jakob's Law: logo left, nav top, standard layout
+       Hick's Law: max 6 items
+       Serial Position: Explore first, Sign In last
+    ═══════════════════════════════════════════════════════════════════════════ */
+        #site-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-md);
+            height: 64px;
+            background: transparent;
+            transition: background 300ms ease, box-shadow 300ms ease;
+        }
+
+        /* On scroll > 60px → frosted glass */
+        #site-nav.scrolled {
+            background: rgba(247, 245, 242, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            color: var(--color-dark);
+            flex-shrink: 0;
+        }
+
+        #site-nav nav {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .nav-link {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            padding-bottom: 2px;
+            transition: color var(--transition);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--color-gold);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform var(--transition);
+        }
+
+        .nav-link:hover {
+            color: var(--color-dark);
+        }
+
+        .nav-link:hover::after {
+            transform: scaleX(1);
+        }
+
+        .nav-link.active {
+            color: var(--color-dark);
+            font-weight: 600;
+        }
+
+        .nav-link.active::after {
+            transform: scaleX(1);
+        }
+
+        /* Favourites badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            background: var(--color-gold);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 9px;
+            margin-left: 4px;
+        }
+
+        /* Sign In CTA */
+        .nav-cta {
+            background: var(--color-gold);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            border-radius: 24px;
+            padding: 0.5rem 1.2rem;
+            min-height: 44px;
+            transition: background var(--transition), transform var(--transition);
+            white-space: nowrap;
+        }
+
+        .nav-cta:hover {
+            background: #b8914e;
+            transform: translateY(-1px);
+        }
+
+        /* Hamburger — mobile only */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 44px;
+            height: 44px;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background var(--transition);
+            z-index: 60;
+        }
+
+        .hamburger:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        .hamburger span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--color-dark);
+            border-radius: 2px;
+            transition: transform 300ms ease, opacity 300ms ease;
+        }
+
+        .hamburger[aria-expanded="true"] span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .hamburger[aria-expanded="true"] span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger[aria-expanded="true"] span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        /* Mobile menu drawer */
+        #mobile-menu {
+            position: fixed;
+            inset: 0;
+            top: 64px;
+            background: var(--color-surface);
+            z-index: 49;
+            padding: var(--space-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            transform: translateX(0);
+        }
+
+        #mobile-menu[hidden] {
+            display: none;
+        }
+
+        .mobile-nav-link {
+            font-family: var(--font-body);
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--color-ink);
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 var(--space-sm);
+            border-radius: var(--radius-card);
+            transition: background var(--transition);
+            letter-spacing: 0.02em;
+        }
+
+        .mobile-nav-link:hover {
+            background: var(--color-bg);
+        }
+
+        .mobile-nav-cta {
+            margin-top: var(--space-sm);
+            background: var(--color-gold);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 24px;
+            padding: 1rem;
+            text-align: center;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background var(--transition);
+        }
+
+        .mobile-nav-cta:hover {
+            background: #b8914e;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       HERO SEARCH SECTION
+       Fitts' Law: search bar is largest interactive element
+       Inverted Pyramid: search above the fold, immediately available
+    ═══════════════════════════════════════════════════════════════════════════ */
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--space-xl) var(--space-md) var(--space-lg);
+            text-align: center;
+            background: linear-gradient(180deg, #FFFDF9 0%, var(--color-bg) 100%);
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 400;
+            color: var(--color-dark);
+            line-height: 1.18;
+            max-width: 680px;
+            letter-spacing: -0.01em;
+        }
+
+        .hero-sub {
+            font-family: var(--font-body);
+            font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+            color: var(--color-neutral);
+            margin-top: var(--space-sm);
+            letter-spacing: 0.01em;
+        }
+
+        /* ── Search bar wrapper ───────────────────────────────────────────────────── */
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 740px;
+            margin-top: var(--space-lg);
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--color-surface);
+            border-radius: 50px;
+            box-shadow: var(--shadow-card), 0 0 0 1.5px var(--color-muted);
+            padding: 6px 6px 6px 8px;
+            gap: 0;
+            transition: box-shadow var(--transition);
+        }
+
+        .search-bar:focus-within {
+            box-shadow: var(--shadow-hover), 0 0 0 2px var(--color-gold);
+        }
+
+        /* Location pill */
+        .location-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 var(--space-sm);
+            min-height: 44px;
+            border-radius: 40px;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-ink);
+            white-space: nowrap;
+            transition: background var(--transition);
+            flex-shrink: 0;
+        }
+
+        .location-pill:hover {
+            background: var(--color-bg);
+        }
+
+        .location-pill svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--color-gold);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .search-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--color-muted);
+            flex-shrink: 0;
+            margin: 0 4px;
+        }
+
+        /* Text input */
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--color-ink);
+            background: transparent;
+            padding: 0 var(--space-sm);
+            min-height: 44px;
+            min-width: 0;
+        }
+
+        .search-input::placeholder {
+            color: var(--color-neutral);
+        }
+
+        /* Search submit button */
+        .search-submit {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 var(--space-md);
+            min-height: 44px;
+            background: var(--color-dark);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            border-radius: 40px;
+            flex-shrink: 0;
+            transition: background var(--transition), transform var(--transition);
+        }
+
+        .search-submit:hover {
+            background: var(--color-gold);
+            transform: scale(1.02);
+        }
+
+        .search-submit svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+        }
+
+        /* Inline location input (fallback when geo denied) */
+        .location-inline-input {
+            border: none;
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-ink);
+            background: transparent;
+            padding: 0 var(--space-sm);
+            min-height: 44px;
+            min-width: 120px;
+        }
+
+        /* ── Autocomplete dropdown ────────────────────────────────────────────────── */
+        .suggestions-list {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--color-surface);
+            border-radius: 16px;
+            box-shadow: var(--shadow-hover), 0 0 0 1px rgba(0, 0, 0, 0.06);
+            list-style: none;
+            overflow: hidden;
+            z-index: 40;
+        }
+
+        .suggestions-list[hidden] {
+            display: none;
+        }
+
+        .suggestions-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.85rem var(--space-md);
+            font-size: 0.95rem;
+            color: var(--color-ink);
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .suggestions-list li:hover,
+        .suggestions-list li.active {
+            background: var(--color-bg);
+        }
+
+        .suggestion-prefix {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .suggestions-list li[data-type="recent"] {
+            color: var(--color-neutral);
+        }
+
+        .suggestions-list li[data-type="trending"] {
+            color: var(--color-ink);
+        }
+
+        /* ── Cuisine chips ────────────────────────────────────────────────────────── */
+        .cuisine-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-xs);
+            justify-content: center;
+            margin-top: var(--space-md);
+            max-width: 740px;
+        }
+
+        .chip {
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-ink);
+            background: var(--color-surface);
+            border: 1.5px solid var(--color-muted);
+            border-radius: 24px;
+            padding: 0.45rem 1rem;
+            min-height: 36px;
+            cursor: pointer;
+            transition: background var(--transition), border-color var(--transition),
+                color var(--transition), transform var(--transition);
+            white-space: nowrap;
+        }
+
+        .chip:hover {
+            border-color: var(--color-gold);
+            transform: translateY(-1px);
+        }
+
+        .chip.active {
+            background: var(--color-dark);
+            border-color: var(--color-dark);
+            color: white;
+        }
+
+        .chip-more {
+            background: transparent;
+            border-color: var(--color-muted);
+            color: var(--color-neutral);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            #site-nav nav {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .location-pill span {
+                display: none;
+            }
+
+            /* save space on mobile */
+
+            .search-bar {
+                flex-wrap: nowrap;
+                padding: 4px 4px 4px 8px;
+            }
+
+            .search-submit span {
+                display: none;
+            }
+
+            /* icon only */
+            .search-submit {
+                padding: 0 0.9rem;
+            }
+
+            .hero-section {
+                padding: var(--space-lg) var(--space-sm) var(--space-md);
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       FILTER BAR
+       Tesler’s Law: simple surface (4 quick filters), complex on demand (More drawer)
+    ═══════════════════════════════════════════════════════════════════════════ */
+        .filter-section {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-muted);
+            position: sticky;
+            top: 64px;
+            z-index: 40;
+        }
+
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-xs);
+            margin-bottom: var(--space-xs);
+            min-height: 0;
+        }
+
+        .filter-chip-active {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--color-dark);
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 500;
+            padding: 0.25rem 0.6rem 0.25rem 0.8rem;
+            border-radius: 16px;
+            letter-spacing: 0.02em;
+        }
+
+        .chip-remove {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0 2px;
+            line-height: 1;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .chip-remove:hover {
+            color: white;
+        }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        /* Quick filter buttons */
+        .filter-btn {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--color-ink);
+            background: var(--color-bg);
+            border: 1.5px solid var(--color-muted);
+            border-radius: 20px;
+            padding: 0.35rem 0.9rem;
+            min-height: 36px;
+            cursor: pointer;
+            transition: background var(--transition), border-color var(--transition), color var(--transition);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--color-gold);
+        }
+
+        .filter-btn.active {
+            background: var(--color-dark);
+            border-color: var(--color-dark);
+            color: white;
+        }
+
+        /* Price buttons */
+        .price-filter {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            margin-left: 4px;
+        }
+
+        .price-btn {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-neutral);
+            background: var(--color-bg);
+            border: 1.5px solid var(--color-muted);
+            border-radius: 20px;
+            padding: 0.3rem 0.7rem;
+            min-height: 36px;
+            cursor: pointer;
+            transition: background var(--transition), border-color var(--transition), color var(--transition);
+        }
+
+        .price-btn:hover {
+            border-color: var(--color-gold);
+            color: var(--color-ink);
+        }
+
+        .price-btn.active {
+            background: var(--color-dark);
+            border-color: var(--color-dark);
+            color: var(--color-gold);
+        }
+
+        .filter-more-btn {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--color-neutral);
+            background: none;
+            border: 1.5px dashed var(--color-muted);
+            border-radius: 20px;
+            padding: 0.35rem 0.9rem;
+            min-height: 36px;
+            cursor: pointer;
+            transition: color var(--transition), border-color var(--transition);
+        }
+
+        .filter-more-btn:hover {
+            color: var(--color-ink);
+            border-color: var(--color-neutral);
+        }
+
+        .clear-link {
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            color: var(--color-danger);
+            margin-left: 4px;
+            cursor: pointer;
+            transition: opacity var(--transition);
+        }
+
+        .clear-link:hover {
+            opacity: 0.75;
+        }
+
+        /* Advanced filter drawer */
+        .advanced-drawer {
+            margin-top: var(--space-sm);
+            background: var(--color-bg);
+            border-radius: var(--radius-card);
+            border: 1px solid var(--color-muted);
+            padding: var(--space-md);
+        }
+
+        .advanced-drawer[hidden] {
+            display: none;
+        }
+
+        .drawer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .drawer-grid fieldset {
+            border: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .drawer-grid legend {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-neutral);
+            margin-bottom: 0.25rem;
+        }
+
+        .drawer-grid label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--color-ink);
+            cursor: pointer;
+        }
+
+        .drawer-grid input[type="checkbox"] {
+            accent-color: var(--color-gold);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .drawer-grid input[type="range"] {
+            width: 100%;
+            accent-color: var(--color-gold);
+            cursor: pointer;
+        }
+
+        .drawer-grid output {
+            font-size: 0.85rem;
+            color: var(--color-neutral);
+            margin-top: 4px;
+        }
+
+        .drawer-close {
+            margin-top: var(--space-md);
+            background: var(--color-dark);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 24px;
+            padding: 0.5rem 1.4rem;
+            transition: background var(--transition);
+        }
+
+        .drawer-close:hover {
+            background: var(--color-gold);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       RESTAURANT CARD GRID
+       Pareto: the card is the primary feature — design it perfectly
+       Miller’s Law: exactly 7 pieces of info per card
+    ═══════════════════════════════════════════════════════════════════════════ */
+        .grid-section {
+            padding: var(--space-md) var(--space-md) var(--space-xl);
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .results-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+            padding-top: var(--space-sm);
+        }
+
+        #results-count {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--color-neutral);
+        }
+
+        .sort-label {
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            color: var(--color-neutral);
+            font-style: italic;
+        }
+
+        /* Card grid layout */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .card-grid[hidden] {
+            display: none;
+        }
+
+        /* ── Card ─────────────────────────────────────────────────────────────────────── */
+        .restaurant-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform var(--transition-slow), box-shadow var(--transition-slow);
+            outline: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Norman Affordance: cards lift on hover — they look tappable */
+        .restaurant-card:hover,
+        .restaurant-card:focus-visible {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .restaurant-card:focus-visible {
+            box-shadow: var(--shadow-hover), 0 0 0 3px var(--color-gold);
+        }
+
+        /* Card image */
+        .card-image-wrap {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .card-image-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 500ms ease;
+        }
+
+        .restaurant-card:hover .card-image-wrap img {
+            transform: scale(1.04);
+        }
+
+        /* Open/closed badge */
+        .open-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-family: var(--font-body);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+
+        .open-badge.open {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .open-badge.closed {
+            background: rgba(0, 0, 0, 0.55);
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Heart / save button — Fitts: close to where the eye is, on the card */
+        .heart-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 50%;
+            color: var(--color-danger);
+            cursor: pointer;
+            transition: background var(--transition), transform var(--transition);
+            border: none;
+        }
+
+        .heart-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .heart-btn.saved {
+            background: white;
+        }
+
+        /* Card body */
+        .card-body {
+            padding: var(--space-sm) var(--space-sm) var(--space-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .card-name {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: var(--color-dark);
+            letter-spacing: 0.01em;
+            line-height: 1.3;
+        }
+
+        /* Rating row */
+        .card-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+        }
+
+        .stars {
+            color: var(--color-gold);
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+
+        .rating-num {
+            font-weight: 600;
+            color: var(--color-dark);
+        }
+
+        .review-count {
+            color: var(--color-neutral);
+        }
+
+        /* Meta row: cuisine · price · distance */
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.82rem;
+            color: var(--color-neutral);
+        }
+
+        .cuisine-tag {
+            color: var(--color-ink);
+            font-weight: 500;
+        }
+
+        .price {
+            color: var(--color-gold);
+            font-weight: 600;
+        }
+
+        .dot {
+            color: var(--color-muted);
+        }
+
+        .card-area,
+        .card-hours {
+            font-size: 0.8rem;
+            color: var(--color-neutral);
+        }
+
+        /* Tags */
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .tag {
+            font-family: var(--font-body);
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--color-neutral);
+            background: var(--color-bg);
+            border: 1px solid var(--color-muted);
+            border-radius: 8px;
+            padding: 2px 7px;
+            letter-spacing: 0.02em;
+        }
+
+        /* Card action buttons */
+        .card-actions {
+            display: flex;
+            gap: var(--space-xs);
+            margin-top: auto;
+            padding-top: var(--space-xs);
+        }
+
+        .btn-reserve {
+            flex: 1;
+            background: var(--color-dark);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-radius: 20px;
+            padding: 0.45rem 0;
+            transition: background var(--transition);
+            /* Norman Constraint: greyed out if no reservations */
+        }
+
+        .btn-reserve:hover:not(:disabled) {
+            background: var(--color-gold);
+        }
+
+        /* Norman Constraint: disabled state for no-reservations restaurants */
+        .btn-reserve:disabled,
+        .btn-reserve[aria-disabled="true"] {
+            background: var(--color-muted);
+            color: var(--color-neutral);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-directions {
+            flex: 1;
+            background: transparent;
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-radius: 20px;
+            border: 1.5px solid var(--color-muted);
+            padding: 0.45rem 0;
+            transition: border-color var(--transition), background var(--transition);
+        }
+
+        .btn-directions:hover {
+            border-color: var(--color-ink);
+            background: var(--color-bg);
+        }
+
+        /* ── Skeleton cards ─────────────────────────────────────────────────────────── */
+        @keyframes shimmer {
+            0% {
+                background-position: -600px 0;
+            }
+
+            100% {
+                background-position: 600px 0;
+            }
+        }
+
+        .skeleton-card {
+            pointer-events: none;
+        }
+
+        .skeleton-img {
+            height: 200px;
+            background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+            background-size: 600px 100%;
+            animation: shimmer 1.4s infinite ease-in-out;
+        }
+
+        .skeleton-line {
+            height: 14px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+            background-size: 600px 100%;
+            animation: shimmer 1.4s infinite ease-in-out;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-line.wide {
+            width: 80%;
+        }
+
+        .skeleton-line.medium {
+            width: 55%;
+        }
+
+        .skeleton-line.narrow {
+            width: 35%;
+        }
+
+        /* ── Empty state ──────────────────────────────────────────────────────────── */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-xl) var(--space-md);
+        }
+
+        .empty-state[hidden] {
+            display: none;
+        }
+
+        .empty-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--color-dark);
+            margin-bottom: var(--space-xs);
+        }
+
+        .empty-sub {
+            font-size: 0.95rem;
+            color: var(--color-neutral);
+            margin-bottom: var(--space-md);
+        }
+
+        .btn-primary {
+            background: var(--color-gold);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 24px;
+            padding: 0.6rem 1.6rem;
+            transition: background var(--transition);
+        }
+
+        .btn-primary:hover {
+            background: #b8914e;
+        }
+
+        /* ── Load more ───────────────────────────────────────────────────────────── */
+        .load-more-btn {
+            display: block;
+            margin: var(--space-lg) auto 0;
+            background: transparent;
+            border: 2px solid var(--color-dark);
+            color: var(--color-dark);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            border-radius: 40px;
+            padding: 0.7rem 2.2rem;
+            cursor: pointer;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        .load-more-btn:hover {
+            background: var(--color-dark);
+            color: white;
+        }
+
+        /* ══ Global Toast Container (Message 4) ══════════════════════════════════════════════ */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 300;
+            pointer-events: none;
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--color-dark);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            padding: 0.7rem 1.2rem;
+            border-radius: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            white-space: nowrap;
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 280ms ease, transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            background: #2e7d32;
+        }
+
+        .toast.error {
+            background: var(--color-danger);
+        }
+
+        .toast.info {
+            background: var(--color-dark);
+        }
+
+        .toast-undo {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 600;
+            border-radius: 16px;
+            padding: 0.3rem 0.9rem;
+            min-height: 44px;
+            /* Fitts: large enough tap target */
+            cursor: pointer;
+            border: none;
+            transition: background var(--transition);
+        }
+
+        .toast-undo:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* Write a Review button on card */
+        .btn-write-review {
+            flex: 1;
+            background: transparent;
+            color: var(--color-gold);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 20px;
+            border: 1.5px solid var(--color-gold);
+            padding: 0.45rem 0;
+            cursor: pointer;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        .btn-write-review:hover {
+            background: var(--color-gold);
+            color: white;
+        }
+
+        /* ══ Review Modal (Message 4) ═══════════════════════════════════════════════ */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: var(--space-md);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay[hidden] {
+            display: none;
+        }
+
+        .modal-box {
+            background: var(--color-surface);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 520px;
+            padding: var(--space-lg);
+            position: relative;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+        }
+
+        /* Progress bar */
+        .modal-progress {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: var(--space-md);
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: var(--color-muted);
+            color: var(--color-neutral);
+            border: 2px solid var(--color-muted);
+            transition: background var(--transition), color var(--transition), border-color var(--transition);
+        }
+
+        .progress-step.active .step-num {
+            background: var(--color-dark);
+            color: white;
+            border-color: var(--color-dark);
+        }
+
+        .progress-step.completed .step-num {
+            background: var(--color-success);
+            color: white;
+            border-color: var(--color-success);
+        }
+
+        .step-label {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--color-neutral);
+            transition: color var(--transition);
+        }
+
+        .progress-step.active .step-label {
+            color: var(--color-dark);
+            font-weight: 600;
+        }
+
+        .progress-step.completed .step-label {
+            color: var(--color-success);
+        }
+
+        .progress-line {
+            flex: 1;
+            height: 2px;
+            background: var(--color-muted);
+            margin: 0 8px;
+        }
+
+        .modal-step-label {
+            font-family: var(--font-body);
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-neutral);
+            margin-bottom: 4px;
+        }
+
+        #review-modal-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: var(--color-dark);
+            margin-bottom: 4px;
+        }
+
+        .modal-restaurant-name {
+            font-size: 0.9rem;
+            color: var(--color-neutral);
+            margin-bottom: var(--space-md);
+        }
+
+        /* Close button */
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--color-bg);
+            color: var(--color-neutral);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        .modal-close:hover {
+            background: var(--color-muted);
+            color: var(--color-dark);
+        }
+
+        /* Step content */
+        .step-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .step-content[hidden] {
+            display: none;
+        }
+
+        /* Star rating — CSS-only RTL trick, no JS for visual */
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-bottom: var(--space-xs);
+        }
+
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 2.4rem;
+            color: var(--color-muted);
+            cursor: pointer;
+            transition: color 150ms ease, transform 150ms ease;
+        }
+
+        /* Highlight hovered + all previous stars (RTL trick) */
+        .star-rating label:hover,
+        .star-rating label:hover~label,
+        .star-rating input:checked~label {
+            color: var(--color-gold);
+            transform: scale(1.1);
+        }
+
+        .rating-label {
+            text-align: center;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--color-gold);
+            min-height: 1.4em;
+        }
+
+        /* Textarea (Step 2) */
+        .field-label {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-dark);
+        }
+
+        .required {
+            color: var(--color-danger);
+            margin-left: 2px;
+        }
+
+        .review-textarea {
+            width: 100%;
+            border: 1.5px solid var(--color-muted);
+            border-radius: 12px;
+            padding: var(--space-sm);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            color: var(--color-ink);
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color var(--transition);
+            outline: none;
+        }
+
+        .review-textarea:focus {
+            border-color: var(--color-gold);
+        }
+
+        .textarea-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: -4px;
+        }
+
+        .field-error {
+            font-size: 0.82rem;
+            color: var(--color-danger);
+            font-weight: 500;
+        }
+
+        .field-error[hidden] {
+            display: none;
+        }
+
+        .char-count {
+            font-size: 0.8rem;
+            color: var(--color-neutral);
+            text-align: right;
+        }
+
+        /* Photo zone (Step 3) */
+        .optional-label {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .optional-tag {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--color-neutral);
+            background: var(--color-bg);
+            border: 1px solid var(--color-muted);
+            border-radius: 8px;
+            padding: 2px 7px;
+        }
+
+        .photo-drop-zone {
+            border: 2px dashed var(--color-muted);
+            border-radius: 16px;
+            padding: var(--space-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--color-neutral);
+            transition: border-color var(--transition), background var(--transition);
+            min-height: 160px;
+        }
+
+        .photo-drop-zone:hover,
+        .photo-drop-zone:focus-visible {
+            border-color: var(--color-gold);
+            background: rgba(196, 160, 90, 0.04);
+        }
+
+        .photo-drop-zone p {
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .photo-hint {
+            font-size: 0.78rem !important;
+            color: var(--color-neutral);
+        }
+
+        /* Modal action buttons */
+        .modal-actions {
+            display: flex;
+            gap: var(--space-xs);
+            justify-content: flex-end;
+            margin-top: var(--space-sm);
+        }
+
+        .btn-cancel,
+        .btn-ghost {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--color-neutral);
+            background: transparent;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: color var(--transition), background var(--transition);
+        }
+
+        .btn-cancel:hover,
+        .btn-ghost:hover {
+            color: var(--color-dark);
+            background: var(--color-bg);
+        }
+
+        /* Success screen */
+        .success-screen {
+            text-align: center;
+            padding: var(--space-md) 0;
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--color-success);
+            color: white;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--space-sm);
+            animation: pop 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        @keyframes pop {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-screen h3 {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 400;
+            color: var(--color-dark);
+            margin-bottom: 8px;
+        }
+
+        .success-screen p {
+            font-size: 0.9rem;
+            color: var(--color-neutral);
+            max-width: 80%;
+            margin: 0 auto var(--space-md);
+            line-height: 1.6;
+        }
+
+        /* Offline banner */
+        .offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--color-danger);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            padding: 0.6rem var(--space-md);
+            z-index: 500;
+        }
+
+        .offline-banner[hidden] {
+            display: none;
+        }
+
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       RESPONSIVE — grid + filter
+    ═══════════════════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            .grid-section {
+                padding: var(--space-sm);
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-section {
+                top: 64px;
+                overflow-x: auto;
+            }
+
+            .filter-bar {
+                flex-wrap: nowrap;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       SECTION 8 — GLOBE VIDEO
+       Norman: Feedback — globe is a living, moving reward for reaching end of page
+       Gestalt Closure — cinematic narrative closing beat
+    ═══════════════════════════════════════════════════════════════════════════ */
+        .globe-section {
+            position: relative;
+            width: 100%;
+            height: 72vh;
+            min-height: 480px;
+            overflow: hidden;
+            background: var(--color-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .globe-section video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 800ms ease;
+        }
+
+        .globe-section.visible video {
+            opacity: 1;
+        }
+
+        .globe-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.65) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .globe-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 0 var(--space-md);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 900ms ease 400ms, transform 900ms ease 400ms;
+        }
+
+        .globe-section.visible .globe-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .globe-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 400;
+            color: white;
+            letter-spacing: 0.02em;
+            margin-bottom: var(--space-sm);
+        }
+
+        .globe-sub {
+            font-family: var(--font-body);
+            font-size: clamp(0.95rem, 2vw, 1.1rem);
+            color: rgba(255, 255, 255, 0.78);
+            max-width: 560px;
+            margin: 0 auto;
+            line-height: 1.75;
+        }
+
+        /* Globe video error fallback — animated pulsing circle */
+        .globe-fallback {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .globe-fallback::after {
+            content: '';
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            border: 1px solid rgba(201, 169, 110, 0.25);
+            animation: globe-pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes globe-pulse {
+
+            0%,
+            100% {
+                transform: scale(0.95);
+                opacity: 0.4;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       SECTION 9 — FOOTER
+       Recency Effect: footer is last thing seen — remembered. Links in 3 clusters.
+       Hick's Law: 3 grouped columns — no overwhelming alphabetical dump
+       Fitts: App download links large and prominent
+    ═══════════════════════════════════════════════════════════════════════════ */
+        .site-footer {
+            background: var(--color-dark);
+            color: rgba(255, 255, 255, 0.7);
+            font-family: var(--font-body);
+            padding: var(--space-xl) var(--space-md) var(--space-lg);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: var(--space-lg);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer-brand .footer-logo {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            color: white;
+            letter-spacing: 0.06em;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: var(--space-sm);
+        }
+
+        .footer-brand p {
+            font-size: 0.875rem;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.55);
+            max-width: 240px;
+            margin-bottom: var(--space-md);
+        }
+
+        /* App download buttons — Fitts: prominent conversion targets */
+        .app-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .app-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            font-size: 0.82rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            text-decoration: none;
+            transition: background var(--transition);
+        }
+
+        .app-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .app-btn-icon {
+            font-size: 1.2rem;
+        }
+
+        .footer-col h4 {
+            font-family: var(--font-body);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--color-gold);
+            margin-bottom: var(--space-sm);
+        }
+
+        .footer-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .footer-col ul a {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: color var(--transition);
+        }
+
+        .footer-col ul a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            max-width: 1200px;
+            margin: var(--space-lg) auto 0;
+            padding-top: var(--space-md);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .footer-legal {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-legal a {
+            color: rgba(255, 255, 255, 0.35);
+            text-decoration: none;
+        }
+
+        .footer-legal a:hover {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       SECTION 10 — KEYBOARD SHORTCUTS PANEL
+       Power Law of Practice: rewards expert users without burdening beginners
+    ═══════════════════════════════════════════════════════════════════════════ */
+        .shortcuts-fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--color-dark);
+            color: white;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 150;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            border: none;
+            transition: background var(--transition), transform var(--transition);
+        }
+
+        .shortcuts-fab:hover {
+            background: var(--color-gold);
+            transform: scale(1.08);
+        }
+
+        .shortcuts-panel {
+            position: fixed;
+            bottom: calc(2rem + 52px);
+            right: 2rem;
+            background: var(--color-surface);
+            border-radius: 20px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+            width: 300px;
+            z-index: 150;
+            overflow: hidden;
+            border: 1px solid var(--color-muted);
+        }
+
+        .shortcuts-panel[hidden] {
+            display: none;
+        }
+
+        .shortcuts-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-sm) var(--space-md);
+            background: var(--color-dark);
+            color: white;
+        }
+
+        .shortcuts-header h3 {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .shortcuts-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+            transition: color var(--transition);
+        }
+
+        .shortcuts-close:hover {
+            color: white;
+        }
+
+        .shortcuts-list {
+            list-style: none;
+            padding: var(--space-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .shortcuts-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: var(--color-ink);
+        }
+
+        .shortcuts-list li:hover {
+            background: var(--color-bg);
+        }
+
+        .shortcuts-list li span {
+            flex: 1;
+            color: var(--color-neutral);
+        }
+
+        kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-body);
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: var(--color-bg);
+            border: 1px solid var(--color-muted);
+            border-bottom-width: 2px;
+            border-radius: 5px;
+            padding: 2px 6px;
+            color: var(--color-dark);
+            white-space: nowrap;
+        }
+
+        .shortcuts-hint {
+            font-size: 0.75rem;
+            color: var(--color-neutral);
+            padding: 0 var(--space-md) var(--space-sm);
+            font-style: italic;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       SECTION 11 — ACCESSIBILITY
+    ═══════════════════════════════════════════════════════════════════════════ */
+
+        /* Skip-to-content link — appears on first Tab press */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: var(--space-md);
+            background: var(--color-gold);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.5rem 1.2rem;
+            border-radius: 0 0 10px 10px;
+            text-decoration: none;
+            z-index: 1000;
+            transition: top 200ms ease;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Focus-visible — keyboard users only (gold ring) */
+        .focus-visible {
+            outline: 2px solid var(--color-gold) !important;
+            outline-offset: 3px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+       MESSAGE 6 — FINAL POLISH
+    ═══════════════════════════════════════════════════════════════════════════ */
+
+        /* Smooth page scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Brand selection colour */
+        ::selection {
+            background: var(--color-gold);
+            color: white;
+        }
+
+        /* Consistent native focus ring for keyboard users */
+        :focus-visible {
+            outline: 2px solid var(--color-gold);
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+
+        :focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        /* Scroll-margin so sticky nav never covers anchored sections */
+        section[id] {
+            scroll-margin-top: 80px;
+        }
+
+        /* Horizontal-scroll chip rows — invisible scrollbar */
+        .cuisine-chips,
+        .filter-bar {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            flex-wrap: nowrap;
+        }
+
+        .cuisine-chips::-webkit-scrollbar,
+        .filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Draft saved indicator (autosave) */
+        .draft-saved-label {
+            font-size: 0.8rem;
+            color: var(--color-success);
+            opacity: 0;
+            transition: opacity 400ms ease;
+            text-align: right;
+            margin-top: 0.25rem;
+            min-height: 1.2em;
+        }
+
+        .draft-saved-label.visible {
+            opacity: 1;
+        }
+
+        /* Print styles — hide cinematic, reveal app */
+        @media print {
+
+            #cinematic-spacer,
+            #cinematic-canvas,
+            #blur-interlude,
+            #skip-btn {
+                display: none !important;
+            }
+
+            #main-app {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Section 11: Skip-to-content link (first element in body) -->
+    <a href="#explore" class="skip-link">Skip to main content</a>
+
+    <!-- ── Cinematic preload bar ────────────────────────────────────────────── -->
+    <div id="preload-bar" role="progressbar" aria-label="Loading experience" aria-valuenow="0" aria-valuemin="0"
+        aria-valuemax="100">
+        <div id="preload-fill"></div>
+    </div>
+
+    <!-- ── Skip intro button ────────────────────────────────────────────────── -->
+    <button id="skip-btn" aria-label="Skip intro">Skip intro ↓</button>
+
+    <!-- ── Cinematic canvas ─────────────────────────────────────────────────── -->
+    <canvas id="cinematic-canvas" aria-hidden="true"></canvas>
+
+    <!-- ── Blur interlude ───────────────────────────────────────────────────── -->
+    <div id="blur-interlude" aria-hidden="true">
+        <blockquote>"Every great meal begins with a discovery."</blockquote>
+    </div>
+
+    <!-- ── Sequence 1 overlay: Wordmark + Tagline ──────────────────────────── -->
+    <div id="seq1-overlay" class="cinematic-overlay" aria-hidden="true">
+        <span class="wordmark">Tabla</span>
+        <p class="tagline">Restaurants worth remembering.</p>
+        <div class="scroll-indicator">
+            <span class="scroll-indicator-text">Scroll Down</span>
+            <div class="scroll-indicator-line"></div>
+        </div>
+    </div>
+
+    <!-- ── Sequence 2 overlay: Discovery CTA ───────────────────────────────── -->
+    <div id="seq2-overlay" class="cinematic-overlay" aria-hidden="true">
+        <p class="seq2-discover">Discover restaurants near you</p>
+        <p class="seq2-cities">Chennai · Mumbai · Bangalore</p>
+        <button id="explore-btn" class="ghost-btn" aria-label="Explore restaurants">Explore Now →</button>
+    </div>
+
+    <!-- ── Scroll budget spacer ─────────────────────────────────────────────── -->
+    <div id="cinematic-spacer"></div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+       MAIN APP (revealed after intro completes)
+  ════════════════════════════════════════════════════════════════════════════ -->
+    <div id="main-app" style="display:none">
+
+        <!-- ── STICKY NAVIGATION ──────────────────────────────────────────────── -->
+        <header id="site-nav" role="banner">
+            <a href="#" class="nav-logo" aria-label="Tabla home">Tabla</a>
+
+            <!-- Desktop nav — Serial Position: Explore first, Sign In last -->
+            <nav aria-label="Main navigation">
+                <a href="#explore" class="nav-link active" aria-current="page">Explore</a>
+                <a href="#near-me" class="nav-link">Near Me</a>
+                <a href="#cuisines" class="nav-link">Cuisines</a>
+                <a href="#favorites" class="nav-link" id="nav-favorites">
+                    Saved
+                    <span id="fav-badge" class="badge" style="display:none" aria-label="0 saved restaurants">0</span>
+                </a>
+                <a href="#deals" class="nav-link">Deals</a>
+                <button class="nav-cta" aria-label="Sign in to your account">Sign In</button>
+            </nav>
+
+            <!-- Mobile hamburger — Fitts: large 44×44px tap target -->
+            <button class="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </header>
+
+        <!-- Mobile menu drawer -->
+        <div id="mobile-menu" role="dialog" aria-label="Navigation menu" hidden>
+            <a href="#explore" class="mobile-nav-link" aria-current="page">Explore</a>
+            <a href="#near-me" class="mobile-nav-link">Near Me</a>
+            <a href="#cuisines" class="mobile-nav-link">Cuisines</a>
+            <a href="#favorites" class="mobile-nav-link">Saved</a>
+            <a href="#deals" class="mobile-nav-link">Deals</a>
+            <button class="mobile-nav-cta" aria-label="Sign in to your account">Sign In</button>
+        </div>
+
+        <!-- ── HERO SEARCH SECTION ────────────────────────────────────────────── -->
+        <!--
+      Inverted Pyramid: most critical content (search) above the fold
+      Fitts' Law: search bar is the largest interactive element, centred
+      Zipf's Law: one action — type in search bar
+    -->
+        <section id="explore" class="hero-section" aria-labelledby="hero-heading">
+
+            <h1 id="hero-heading" class="hero-title">
+                Find your next favourite table.
+            </h1>
+            <p class="hero-sub">Handpicked restaurants across Chennai, Mumbai &amp; Bangalore.</p>
+
+            <!-- PRIMARY ACTION — search bar -->
+            <div class="search-wrapper" role="search">
+                <div class="search-bar" id="search-container">
+
+                    <!-- Location pill -->
+                    <button class="location-pill" id="location-btn" aria-label="Set your location">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                            <circle cx="12" cy="9" r="2.5" />
+                        </svg>
+                        <span id="location-text">Detecting location…</span>
+                    </button>
+
+                    <div class="search-divider" aria-hidden="true"></div>
+
+                    <!-- Text input -->
+                    <input type="search" id="main-search" class="search-input"
+                        placeholder='Try "biryani" or "rooftop dining"'
+                        aria-label="Search for restaurants, cuisines or dishes" autocomplete="off" spellcheck="false"
+                        aria-autocomplete="list" aria-controls="search-suggestions" aria-expanded="false" />
+
+                    <!-- Submit -->
+                    <button class="search-submit" aria-label="Search restaurants" id="search-submit-btn">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7" />
+                            <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                        </svg>
+                        <span>Find</span>
+                    </button>
+                </div>
+
+                <!-- Autocomplete dropdown -->
+                <ul id="search-suggestions" class="suggestions-list" role="listbox" aria-label="Search suggestions"
+                    hidden></ul>
+            </div>
+
+            <!-- Cuisine chips — Hick's Law: 6 visible choices max, sorted by popularity -->
+            <div class="cuisine-chips" role="group" aria-label="Browse by cuisine">
+                <button class="chip active" data-cuisine="all">All</button>
+                <button class="chip" data-cuisine="south-indian">🍛 South Indian</button>
+                <button class="chip" data-cuisine="north-indian">🫓 North Indian</button>
+                <button class="chip" data-cuisine="pan-asian">🥢 Pan-Asian</button>
+                <button class="chip" data-cuisine="cafe">☕ Café &amp; Brunch</button>
+                <button class="chip" data-cuisine="desserts">🍮 Desserts &amp; Chai</button>
+                <button class="chip chip-more" id="more-cuisines-btn" aria-expanded="false">More ↓</button>
+            </div>
+
+        </section>
+
+        <!-- ── FILTER BAR + RESTAURANT GRID (Message 3) ──────────────────────────── -->
+        <div id="restaurant-section">
+
+            <!-- Filter bar — Tesler: 4 quick filters on surface, more on demand -->
+            <section class="filter-section" aria-label="Filter restaurants">
+
+                <!-- Active filter chips (live region) -->
+                <div id="active-filters" class="active-filters" aria-live="polite" aria-label="Active filters"></div>
+
+                <div class="filter-bar" role="group" aria-label="Quick filters">
+                    <button class="filter-btn active" data-filter="all" aria-pressed="true">All</button>
+                    <button class="filter-btn" data-filter="open-now" aria-pressed="false">Open Now</button>
+                    <button class="filter-btn" data-filter="top-rated" aria-pressed="false">Top Rated</button>
+                    <button class="filter-btn" data-filter="nearby" aria-pressed="false">Nearby (&lt;2 km)</button>
+
+                    <div class="price-filter" role="group" aria-label="Price range">
+                        <button class="price-btn" data-price="1" aria-pressed="false"
+                            aria-label="Affordable, one rupee sign">₹</button>
+                        <button class="price-btn" data-price="2" aria-pressed="false"
+                            aria-label="Mid-range, two rupee signs">₹₹</button>
+                        <button class="price-btn" data-price="3" aria-pressed="false"
+                            aria-label="Fine dining, three rupee signs">₹₹₹</button>
+                    </div>
+
+                    <button class="filter-more-btn" id="advanced-filter-btn" aria-expanded="false"
+                        aria-controls="advanced-filters">
+                        More filters ↓
+                    </button>
+
+                    <a href="#" id="clear-filters" class="clear-link" role="button" aria-label="Clear all filters"
+                        style="display:none">Clear all</a>
+                </div>
+
+                <!-- Advanced filter drawer -->
+                <div id="advanced-filters" class="advanced-drawer" hidden aria-label="Advanced filters">
+                    <div class="drawer-grid">
+                        <fieldset>
+                            <legend>Dietary</legend>
+                            <label><input type="checkbox" value="vegetarian"> Vegetarian</label>
+                            <label><input type="checkbox" value="vegan"> Vegan</label>
+                            <label><input type="checkbox" value="gluten-free"> Gluten-free</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Ambiance</legend>
+                            <label><input type="checkbox" value="rooftop"> Rooftop</label>
+                            <label><input type="checkbox" value="quiet"> Quiet &amp; intimate</label>
+                            <label><input type="checkbox" value="outdoor"> Outdoor seating</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Distance</legend>
+                            <input type="range" id="distance-slider" min="1" max="20" value="20"
+                                aria-label="Maximum distance in kilometres" aria-valuetext="20 km" />
+                            <output for="distance-slider"><span id="distance-val">20</span> km</output>
+                        </fieldset>
+                    </div>
+                    <button class="drawer-close" aria-label="Close advanced filters">Done</button>
+                </div>
+            </section>
+
+            <!-- Restaurant results grid -->
+            <section id="restaurant-grid" class="grid-section" aria-label="Restaurant results" aria-live="polite">
+                <div class="results-summary" role="status">
+                    <span id="results-count">Loading restaurants…</span>
+                    <span class="sort-label">Sorted by best match</span>
+                </div>
+
+                <!-- Skeleton loading state (600ms) -->
+                <div id="skeleton-grid" class="card-grid" aria-label="Loading restaurants" hidden></div>
+
+                <!-- Live results -->
+                <div class="card-grid" id="results-grid" hidden></div>
+
+                <!-- Load more -->
+                <button class="load-more-btn" id="load-more" aria-label="Load more restaurants" style="display:none">
+                    Load more restaurants
+                </button>
+
+                <!-- Empty state -->
+                <div id="empty-state" class="empty-state" hidden role="status">
+                    <p class="empty-title">No restaurants found.</p>
+                    <p class="empty-sub">Try widening your distance or clearing some filters.</p>
+                    <button class="btn-primary" id="clear-and-retry">Clear filters and try again</button>
+                </div>
+            </section>
+
+        </div><!-- /#restaurant-section -->
+
+    </div><!-- /#main-app -->
+
+    <!-- Toast container (Message 4 — stacking, typed) -->
+    <div id="toast-container" aria-live="polite" aria-atomic="false" role="status" class="toast-container"></div>
+
+    <!-- Offline banner -->
+    <div id="offline-banner" class="offline-banner" hidden role="status" aria-live="polite">
+        🚫 You're offline. Showing recently viewed restaurants.
+    </div>
+
+    <!-- Review Modal (3-step) -->
+    <div id="review-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="review-modal-title"
+        hidden>
+        <div class="modal-box">
+
+            <div class="modal-progress" aria-label="Review progress">
+                <div class="progress-step active" data-step="1" aria-label="Step 1: Rating">
+                    <span class="step-num">1</span><span class="step-label">Rating</span>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="2" aria-label="Step 2: Your review">
+                    <span class="step-num">2</span><span class="step-label">Review</span>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="3" aria-label="Step 3: Add photo">
+                    <span class="step-num">3</span><span class="step-label">Photo</span>
+                </div>
+            </div>
+
+            <p class="modal-step-label" aria-live="polite">Step 1 of 3</p>
+            <h2 id="review-modal-title">How was your experience?</h2>
+            <p class="modal-restaurant-name"></p>
+
+            <!-- STEP 1: Star rating -->
+            <div id="step-1" class="step-content">
+                <div class="star-rating" role="radiogroup" aria-label="Rate your experience">
+                    <input type="radio" name="rating" id="r5" value="5" aria-label="5 stars — Outstanding">
+                    <label for="r5" title="Outstanding">★</label>
+                    <input type="radio" name="rating" id="r4" value="4" aria-label="4 stars — Great">
+                    <label for="r4" title="Great">★</label>
+                    <input type="radio" name="rating" id="r3" value="3" aria-label="3 stars — Good">
+                    <label for="r3" title="Good">★</label>
+                    <input type="radio" name="rating" id="r2" value="2" aria-label="2 stars — Fair">
+                    <label for="r2" title="Fair">★</label>
+                    <input type="radio" name="rating" id="r1" value="1" aria-label="1 star — Poor">
+                    <label for="r1" title="Poor">★</label>
+                </div>
+                <p id="rating-label" class="rating-label" aria-live="polite"></p>
+                <div class="modal-actions">
+                    <button class="btn-cancel" id="review-cancel">Cancel</button>
+                    <button class="btn-primary" id="step1-next" disabled aria-disabled="true">Next →</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Written review -->
+            <div id="step-2" class="step-content" hidden>
+                <label for="review-text" class="field-label">
+                    Your review <span class="required" aria-label="required">*</span>
+                </label>
+                <textarea id="review-text" class="review-textarea"
+                    placeholder="What made this meal memorable? What should others know?" rows="5" minlength="20"
+                    maxlength="1000" aria-describedby="char-count review-error" aria-required="true"></textarea>
+                <div class="textarea-meta">
+                    <span id="review-error" class="field-error" role="alert" aria-live="polite" hidden>
+                        Your review needs at least 20 characters.
+                    </span>
+                    <span id="char-count" class="char-count" aria-live="polite">0 / 1000</span>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-ghost" id="step2-back">← Back</button>
+                    <button class="btn-primary" id="step2-next" disabled aria-disabled="true">Next →</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Photo (optional) -->
+            <div id="step-3" class="step-content" hidden>
+                <p class="optional-label">Add a photo <span class="optional-tag">Optional</span></p>
+                <div class="photo-drop-zone" id="photo-zone" role="button" tabindex="0"
+                    aria-label="Click or drag to add a photo">
+                    <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"
+                        aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <p>Tap to add a photo</p>
+                    <p class="photo-hint">JPG or PNG, max 10MB</p>
+                </div>
+                <input type="file" id="photo-input" accept="image/jpeg,image/png" hidden aria-hidden="true">
+                <div class="modal-actions">
+                    <button class="btn-ghost" id="step3-back">← Back</button>
+                    <button class="btn-primary" id="step3-submit">Submit review</button>
+                </div>
+            </div>
+
+            <!-- SUCCESS SCREEN -->
+            <div id="step-success" class="step-content success-screen" hidden>
+                <div class="success-icon" aria-hidden="true">✓</div>
+                <h3>Review submitted!</h3>
+                <p>It'll be visible within 24 hours. Thank you for helping others discover great restaurants.</p>
+                <button class="btn-primary" id="review-done">Done</button>
+            </div>
+
+            <button class="modal-close" aria-label="Close review form" id="review-close">✕</button>
+        </div>
+    </div>
+
+    <!-- Section 8: Globe Video -->
+    <section class="globe-section" aria-label="Tabla connects the world">
+        <div class="globe-vignette" aria-hidden="true"></div>
+        <video id="globe-video" src="folder1/globe.mp4" autoplay muted loop playsinline aria-hidden="true"
+            preload="none"></video>
+        <div class="globe-content">
+            <h2 class="globe-title">Great restaurants, everywhere.</h2>
+            <p class="globe-sub">
+                From Murugan Idli Shop in Mylapore to a hidden ramen bar in Bandra —
+                Tabla finds them all.
+            </p>
+        </div>
+    </section>
+
+    <!-- Section 9: Footer —
+         Recency Effect: grouped into 3 clusters (Hick's Law); app links prominent (Fitts) -->
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-grid">
+            <!-- Brand + App Downloads -->
+            <div class="footer-brand">
+                <a href="#" class="footer-logo" aria-label="Tabla home">Tabla</a>
+                <p>Find the best restaurants near you — curated for people who care about where they eat, not just what
+                    they eat.</p>
+                <div class="app-links">
+                    <a href="#" class="app-btn" aria-label="Download on the App Store">
+                        <span class="app-btn-icon" aria-hidden="true">🍎</span>
+                        <span>App Store</span>
+                    </a>
+                    <a href="#" class="app-btn" aria-label="Get it on Google Play">
+                        <span class="app-btn-icon" aria-hidden="true">▶</span>
+                        <span>Google Play</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Cluster 1: Discover -->
+            <div class="footer-col">
+                <h4>Discover</h4>
+                <ul>
+                    <li><a href="#">Explore restaurants</a></li>
+                    <li><a href="#">Top rated</a></li>
+                    <li><a href="#">New openings</a></li>
+                    <li><a href="#">Hidden gems</a></li>
+                    <li><a href="#">Near me</a></li>
+                </ul>
+            </div>
+
+            <!-- Cluster 2: Company -->
+            <div class="footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Tabla</a></li>
+                    <li><a href="#">For restaurants</a></li>
+                    <li><a href="#">Press</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Blog</a></li>
+                </ul>
+            </div>
+
+            <!-- Cluster 3: Support -->
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="#">Help centre</a></li>
+                    <li><a href="#">Contact us</a></li>
+                    <li><a href="#">Accessibility</a></li>
+                    <li><a href="#">Sitemap</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2025 Tabla Technologies Pvt. Ltd. All rights reserved.</span>
+            <div class="footer-legal">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Cookie Settings</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Section 10: Keyboard Shortcuts FAB + Panel -->
+    <button id="shortcuts-btn" class="shortcuts-fab" aria-label="Show keyboard shortcuts" aria-expanded="false"
+        aria-controls="shortcuts-panel" title="Keyboard shortcuts (?)">?</button>
+
+    <div id="shortcuts-panel" class="shortcuts-panel" role="dialog" aria-label="Keyboard shortcuts" hidden>
+        <div class="shortcuts-header">
+            <h3>Keyboard shortcuts</h3>
+            <button class="shortcuts-close" aria-label="Close shortcuts panel">✕</button>
+        </div>
+        <ul class="shortcuts-list">
+            <li><kbd>/</kbd> <span>Focus search</span></li>
+            <li><kbd>F</kbd> <span>Open saved restaurants</span></li>
+            <li><kbd>↑</kbd><kbd>↓</kbd> <span>Navigate results</span></li>
+            <li><kbd>Enter</kbd> <span>Open selected restaurant</span></li>
+            <li><kbd>S</kbd> <span>Save / unsave selected</span></li>
+            <li><kbd>Esc</kbd> <span>Close any dialog</span></li>
+            <li><kbd>?</kbd> <span>Show this panel</span></li>
+        </ul>
+        <p class="shortcuts-hint">Shortcuts work when no input is focused.</p>
+    </div>
+
+    <!-- Compiled TypeScript -->
+    <script type="module" src="src/main.ts"></script>
+
+</body>
+
+</html>
