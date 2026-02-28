@@ -1,7 +1,7 @@
 # Tabla — Restaurant Discovery Website
 
 
-#PLEASE VISIT THE DEMO VIDEO https://drive.google.com/file/d/1yoggJVuMjo1Ss-kz8HULmWFRshEcZrpc/view?usp=sharing
+# PLEASE VISIT THE DEMO VIDEO https://drive.google.com/file/d/1yoggJVuMjo1Ss-kz8HULmWFRshEcZrpc/view?usp=sharing
 
 
 Tabla is a modern, responsive, full-stack, single-page restaurant discovery application targeting urban food enthusiasts. The application features a cinematic scroll-driven introduction, an advanced filtering and search mechanism, and a fully functional MVP reservation system. It is designed following rigorous Human-Computer Interaction (HCI) methodologies.
