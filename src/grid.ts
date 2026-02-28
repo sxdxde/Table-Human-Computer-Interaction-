@@ -249,7 +249,9 @@ function buildCard(r: Restaurant): HTMLElement {
         ${r.tags.slice(0, 3).map((t: string) => `<span class="tag">${t}</span>`).join('')}
       </div>
       <div class="card-actions">
-        <button class="btn-reserve"
+        <button class="btn-reserve reserve-btn"
+          data-id="${r.id}"
+          data-name="${r.name}"
           ${!r.acceptsReservations
             ? 'disabled aria-disabled="true" title="This restaurant doesn\'t accept reservations"'
             : `aria-label="Reserve a table at ${r.name}"`}>

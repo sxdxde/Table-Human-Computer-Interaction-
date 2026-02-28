@@ -8,6 +8,8 @@ import './accessibility';
 import { createRafScrollHandler } from './performance';
 import './performance';
 import './responsive';
+import './pages';
+import './reservation';
 import './integration';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -88,6 +90,8 @@ function setOpacity(el: HTMLElement, opacity: number): void {
 }
 
 function revealMainApp(): void {
+    // Hide the skip button immediately — don't show it in main app
+    skipBtn.style.display = 'none';
     canvas.style.transition = 'opacity 800ms ease';
     canvas.style.opacity = '0';
     seq1Overlay.style.display = 'none';
@@ -98,7 +102,9 @@ function revealMainApp(): void {
         canvas.style.display = 'none';
         spacer.style.display = 'none';
         mainApp.style.display = 'block';
-    }, 800);
+        // Scroll to top so user lands at hero search, not footer
+        window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    }, 820);
 }
 
 // Restore cinematic so the logo click can replay the intro
@@ -113,6 +119,7 @@ function restoreCinematic(): void {
     seq2Overlay.style.display = 'none';
     blurInterlude.style.opacity = '0';
     blurInterlude.style.pointerEvents = 'none';
+    // Show skip button again for the cinematic
     skipBtn.style.display = 'block';
     // Hide main app while cinematic plays
     mainApp.style.display = 'none';
@@ -288,12 +295,9 @@ function onScroll(): void {
 
 skipBtn.addEventListener('click', (): void => {
     introComplete = true;
+    skipBtn.style.display = 'none'; // hide immediately on click
     revealMainApp();
     window.dispatchEvent(new CustomEvent('tabla:skip-intro'));
-    // Scroll to top after the 800ms canvas fade so the hero is the first thing seen
-    setTimeout((): void => {
-        window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-    }, 820);
 });
 
 // ─── Explore Now button ───────────────────────────────────────────────────────
@@ -302,9 +306,6 @@ exploreBtn.addEventListener('click', (): void => {
     introComplete = true;
     revealMainApp();
     window.dispatchEvent(new CustomEvent('tabla:explore-now'));
-    setTimeout((): void => {
-        mainApp.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
 });
 
 // ─── Nav logo — replay cinematic ───────────────────────────────────────────
